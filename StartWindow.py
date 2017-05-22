@@ -1,7 +1,7 @@
 import sys
 from SettingsWindow import SettingsWindow
 from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QAction, qApp  # Main application classes
-from PyQt5.QtWidgets import QLabel, QPushButton, QSizePolicy, QSpacerItem, QLineEdit, QMenu  # Tools for GUI
+from PyQt5.QtWidgets import QLabel, QPushButton, QSizePolicy, QSpacerItem, QLineEdit, QMenu, QGroupBox  # Tools for GUI
 from PyQt5.QtWidgets import QHBoxLayout, QVBoxLayout, QGridLayout  # Layouts
 from PyQt5.QtCore import QSize, QSettings
 
@@ -23,6 +23,22 @@ class Button(QPushButton):
         self.clicked.connect(connect)
         if fixed:
             self.setFixedSize(40, 35)
+
+
+class RecentProjectLabel(QLabel):
+    def __init__(self, text, link, parent=None):
+        super().__init__(parent)
+        self.text = text
+        self.link = link
+        self.setText(self.text+"\n"+self.link)
+        self.action = QAction()
+        self.action.triggered.connect(self.mousePressEvent)
+        self.addAction(self.action)
+
+    def mousePressEvent(self, QMouseEvent):
+        if QMouseEvent.button() == 1:
+            print (self.text)
+            print (self.link)
 
 
 class StartWindow(QMainWindow):
@@ -72,7 +88,29 @@ class StartWindow(QMainWindow):
         project_menubar.addSeparator()
         project_menubar.addAction(exit_menubar)
 
-        grid_layout = QGridLayout(self)
+        hbox_layout = QHBoxLayout(self)
+        vbox_left = QVBoxLayout()
+        vbox_right = QVBoxLayout()
+        self.central_widget.setLayout(hbox_layout)
+
+        # Recent projects left tab
+        recent_projects_group = QGroupBox("Recent projects")
+        recent_projects_group.setLayout(vbox_left)
+        # Take fixed size from window and resize group
+        recent_projects_group.setMinimumSize(self.width()/2, self.height()/2)
+        test_label1 = RecentProjectLabel("TestProject1", "TestProject1Link", self.central_widget)
+        test_label2 = RecentProjectLabel("TestProject2", "TestProject2Link", self.central_widget)
+        vbox_left.addWidget(test_label1)
+        vbox_left.addWidget(test_label2)
+        vbox_left.addStretch(1)
+
+
+        x_but = Button("Test button", self.action_open, self.central_widget)
+        vbox_right.addWidget(x_but)
+        hbox_layout.addWidget(recent_projects_group)
+        hbox_layout.addLayout(vbox_left)
+        hbox_layout.addLayout(vbox_right)
+        hbox_layout.addStretch(1)
 
         self.show()
 
@@ -90,6 +128,9 @@ class StartWindow(QMainWindow):
         if not self.setting_window_active:
             self.setting_window = SettingsWindow()
             self.setting_window.show()
+
+    def action_open(self):
+        print(self.minimumHeight())
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
