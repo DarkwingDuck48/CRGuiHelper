@@ -26,11 +26,23 @@ class Button(QPushButton):
 
 
 class RecentProjectLabel(QLabel):
+    """
+    Create a clickable label
+    """
     def __init__(self, text, link, parent=None):
+        """
+        
+        :param text: project name 
+        :param link: link to project
+        :param parent: parent widget
+        """
         super().__init__(parent)
         self.text = text
         self.link = link
         self.setText(self.text+"\n"+self.link)
+        self.setStyleSheet("""QLabel:hover {background-color:#E0FFFF}
+                              """
+                           )
         self.action = QAction()
         self.action.triggered.connect(self.mousePressEvent)
         self.addAction(self.action)
@@ -47,7 +59,7 @@ class StartWindow(QMainWindow):
         self.recent_Projects = {"Project1": "C:\\ProgramFiles"}
         self.setting_window_active = False
 
-        self.setMinimumSize(QSize(560, 380))
+        self.setFixedSize(QSize(560, 410))
         self.setWindowTitle("CR Helper")
         self.central_widget = QWidget(self)
         self.setCentralWidget(self.central_widget)
@@ -97,13 +109,27 @@ class StartWindow(QMainWindow):
         recent_projects_group = QGroupBox("Recent projects")
         recent_projects_group.setLayout(vbox_left)
         # Take fixed size from window and resize group
+        groupbox_style = """QGroupBox 
+                                {background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                                                stop: 0 #E0E0E0, stop: 1 #FFFFFF);
+                                border: 1px solid gray;
+                                border-radius: 5px;
+                                margin-top: 0.3ex;
+                                }
+                            QGroupBox:title 
+                                {subcontrol-origin: margin;
+                                 subcontrol-position: top center;
+                                 padding: 0 3px;
+                                 background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                                                        stop: 0 #FF0ECE, stop: 1 #FFFFFF);
+                                 }
+                        """
+        recent_projects_group.setStyleSheet(groupbox_style)
         recent_projects_group.setMinimumSize(self.width()/2, self.height()/2)
-        test_label1 = RecentProjectLabel("TestProject1", "TestProject1Link", self.central_widget)
-        test_label2 = RecentProjectLabel("TestProject2", "TestProject2Link", self.central_widget)
-        vbox_left.addWidget(test_label1)
-        vbox_left.addWidget(test_label2)
+        for i in range(1, 11):
+            project = RecentProjectLabel("TestProject"+str(i), "TestProject"+str(i)+"Link", self.central_widget)
+            vbox_left.addWidget(project)
         vbox_left.addStretch(1)
-
 
         x_but = Button("Test button", self.action_open, self.central_widget)
         vbox_right.addWidget(x_but)
