@@ -1,7 +1,7 @@
 import sys
 import datetime
 import arrow        # datatime utility
-from SettingsWindow import SettingsWindow
+from Samples import Button, Action, RecentProjectLabel
 from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QAction, qApp  # Main application classes
 from PyQt5.QtWidgets import QLabel, QPushButton, QSizePolicy, QSpacerItem, QLineEdit, QMenu, QGroupBox  # Tools for GUI
 from PyQt5.QtWidgets import QHBoxLayout, QVBoxLayout, QGridLayout  # Layouts
@@ -21,7 +21,7 @@ class NewProjectWindow(QMainWindow):
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     newprojectwindow = NewProjectWindow()
-    utc = arrow.utcnow().to('local').format("DD-MM-YYYY")
+    utc = arrow.utcnow().to('local').format("MM.DD.YYYY")
     print(utc)
     sys.exit(app.exec_())
 
