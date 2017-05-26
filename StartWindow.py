@@ -1,5 +1,6 @@
 import sys
 from SettingsWindow import SettingsWindow
+from NewProjectWindow import NewProjectWindow
 from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QAction, qApp  # Main application classes
 from PyQt5.QtWidgets import QLabel, QPushButton, QSizePolicy, QSpacerItem, QLineEdit, QMenu, QGroupBox  # Tools for GUI
 from PyQt5.QtWidgets import QHBoxLayout, QVBoxLayout, QGridLayout  # Layouts
@@ -25,6 +26,16 @@ class Button(QPushButton):
             self.setFixedSize(40, 35)
 
 
+class Action(QAction):
+    def __init__(self, text, connect, shortcut=None, statustip=None, parent =None):
+        super(Action, self).__init__(text, parent)
+        if shortcut:
+            self.setShortcut(shortcut)
+        if statustip:
+            self.setStatusTip(statustip)
+        self.triggered.connect(connect)
+
+
 class RecentProjectLabel(QLabel):
     """
     Create a clickable label
@@ -40,7 +51,7 @@ class RecentProjectLabel(QLabel):
         self.text = text
         self.link = link
         self.setText(self.text+"\n"+self.link)
-        self.setStyleSheet("""QLabel:hover {background-color:#E0FFFF}
+        self.setStyleSheet("""QLabel:hover {background-color:#00FF00}
                               """
                            )
         self.action = QAction()
@@ -49,56 +60,25 @@ class RecentProjectLabel(QLabel):
 
     def mousePressEvent(self, QMouseEvent):
         if QMouseEvent.button() == 1:
-            print (self.text)
-            print (self.link)
+            print(self.text)
+            print(self.link)
 
 
 class StartWindow(QMainWindow):
     def __init__(self):
         QMainWindow.__init__(self)
-        self.recent_Projects = {"Project1": "C:\\ProgramFiles"}
+        self.recent_Projects = {}
         self.setting_window_active = False
+        self.newproject_window_active = False
 
         self.setFixedSize(QSize(560, 410))
         self.setWindowTitle("CR Helper")
         self.central_widget = QWidget(self)
         self.setCentralWidget(self.central_widget)
         self.statusBar()
-
-        # Actions for menubar
-
-        create_project_menubar = QAction("&New project", self)
-        create_project_menubar.setShortcut("Ctrl+N")
-        create_project_menubar.setStatusTip("Create new CR project")
-
-        open_project_menubar = QAction("&Open project", self)
-        open_project_menubar.setShortcut("Ctrl+O")
-        open_project_menubar.setStatusTip("Open project")
-
-        settings_menubar = QAction("&Settings", self)
-        settings_menubar.setStatusTip("Settings for application")
-        settings_menubar.triggered.connect(self.settings_open)
-
-        exit_menubar = QAction("&Exit", self)
-        exit_menubar.setStatusTip("Exit apllication")
-        exit_menubar.triggered.connect(qApp.quit)
-        
-        # menubar
-        self.top_menu = self.menuBar()
-        project_menubar = self.top_menu.addMenu("&File")
-        project_menubar.addAction(create_project_menubar)
-        project_menubar.addAction(open_project_menubar)
-        recent_projects_menubar = project_menubar.addMenu("Recent Project")
-        recent_projects = self.create_recent(self.recent_Projects)
-        if isinstance(recent_projects, str):
-            recent_projects_menubar.addAction(recent_projects)
-        elif isinstance(recent_projects, list):
-            for recent in recent_projects:
-                recent_projects_menubar.addAction(recent)
-        project_menubar.addSeparator()
-        project_menubar.addAction(settings_menubar)
-        project_menubar.addSeparator()
-        project_menubar.addAction(exit_menubar)
+        for i in range(1, 11):
+            self.recent_Projects.update({"TestProject" + str(i): "TestProject" + str(i) + "Link"})
+        self.menubar_create()
 
         hbox_layout = QHBoxLayout(self)
         vbox_left = QVBoxLayout()
@@ -119,9 +99,7 @@ class StartWindow(QMainWindow):
                             QGroupBox:title 
                                 {subcontrol-origin: margin;
                                  subcontrol-position: top center;
-                                 padding: 0 3px;
-                                 background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
-                                                                        stop: 0 #FF0ECE, stop: 1 #FFFFFF);
+                                 padding: 0 5px;
                                  }
                         """
         recent_projects_group.setStyleSheet(groupbox_style)
@@ -152,11 +130,44 @@ class StartWindow(QMainWindow):
 
     def settings_open(self):
         if not self.setting_window_active:
+
             self.setting_window = SettingsWindow()
             self.setting_window.show()
 
+    def newproject_open(self):
+        if not self.newproject_window_active:
+            self.newproject_window = NewProjectWindow()
+            self.newproject_window.show()
+
     def action_open(self):
         print(self.minimumHeight())
+
+    def menubar_create(self):
+
+        # menubar
+        self.top_menu = self.menuBar()
+        project_menubar = self.top_menu.addMenu("&File")
+
+        project_menubar.addAction(Action("&New project", self.newproject_open, "Ctrl+N",
+                                         "Create new CR Project", parent=self))
+        project_menubar.addAction(Action("&Open project", self.action_open, "Ctrl+O",
+                                         "Open project", parent=self))
+
+        recent_projects_menubar = project_menubar.addMenu("Recent Project")
+        recent_projects = self.create_recent(self.recent_Projects)
+
+        if isinstance(recent_projects, str):
+            recent_projects_menubar.addAction(recent_projects)
+        elif isinstance(recent_projects, list):
+            for recent in recent_projects:
+                recent_projects_menubar.addAction(recent)
+        project_menubar.addSeparator()
+        project_menubar.addAction(Action(text="&Settings", connect=self.settings_open,
+                                         statustip="Settings for application", parent=self))
+        project_menubar.addSeparator()
+        project_menubar.addAction(Action(text="&Exit", connect=qApp.quit,
+                                         statustip="Exit Application", parent=self))
+
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
