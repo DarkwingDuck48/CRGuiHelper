@@ -27,7 +27,20 @@ class Button(QPushButton):
 
 
 class Action(QAction):
-    def __init__(self, text, connect, shortcut=None, statustip=None, parent =None):
+    """
+    Class for create actions in one line
+    """
+    def __init__(self, text: str, connect, shortcut: str = None, statustip: str = None,
+                 parent: QMainWindow = None):
+        """
+        
+        :param text: Action name
+        :param connect: function to execute
+        :param shortcut: Shortcut for executing action
+        :param statustip: Status tip in status bar
+        :param parent: QMainWidget item
+        """
+
         super(Action, self).__init__(text, parent)
         if shortcut:
             self.setShortcut(shortcut)
@@ -67,6 +80,8 @@ class RecentProjectLabel(QLabel):
 class StartWindow(QMainWindow):
     def __init__(self):
         QMainWindow.__init__(self)
+        # init special variables
+        self.top_menu = None
         self.recent_Projects = {}
         self.setting_window_active = False
         self.newproject_window_active = False
@@ -130,7 +145,6 @@ class StartWindow(QMainWindow):
 
     def settings_open(self):
         if not self.setting_window_active:
-
             self.setting_window = SettingsWindow()
             self.setting_window.show()
 
@@ -143,8 +157,6 @@ class StartWindow(QMainWindow):
         print(self.minimumHeight())
 
     def menubar_create(self):
-
-        # menubar
         self.top_menu = self.menuBar()
         project_menubar = self.top_menu.addMenu("&File")
 
@@ -167,8 +179,6 @@ class StartWindow(QMainWindow):
         project_menubar.addSeparator()
         project_menubar.addAction(Action(text="&Exit", connect=qApp.quit,
                                          statustip="Exit Application", parent=self))
-
-
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     startwindow = StartWindow()
