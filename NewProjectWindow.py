@@ -76,8 +76,6 @@ class NewProjectWindow(QMainWindow):
         self.jira_link.setText("https://servicedesk.vimpelcom.com/projects/GRSCM/issues/GRSCM-"
                                + self.crnumber_line.text())
 
-
-
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     newprojectwindow = NewProjectWindow()
