@@ -2,29 +2,12 @@
 import sys
 import os
 import os.path
+from Samples import Button, RecentProjectLabel, Action
 from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QAction                     # Main application classes
 from PyQt5.QtWidgets import QLabel, QPushButton, QSizePolicy, QSpacerItem, QLineEdit        # Tools for GUI
 from PyQt5.QtWidgets import QHBoxLayout, QVBoxLayout, QGridLayout                           # Layouts
 from PyQt5.QtWidgets import QFileDialog
 from PyQt5.QtCore import QSize
-
-
-class Button(QPushButton):
-    """
-    Base class for button creation
-    """
-    def __init__(self, text, connect, parent=None, fixed=False):
-        """
-        
-        :param text: Button name
-        :param connect: connection name
-        :param parent: parent name
-        :param fixed: if true => fixed size is (24,20) 
-        """
-        super().__init__(text, parent)
-        self.clicked.connect(connect)
-        if fixed:
-            self.setFixedSize(24, 20)
 
 
 class SettingsWindow(QMainWindow):

@@ -11,10 +11,6 @@
       "owncloud_settings": {
         "owncloud_path": "C:\\",
         "owncloud_last_updated": "18.05.2017 13:05",
-        "user_names_for_parse": [
-          "Name LastName",
-          "LastName Name"
-        ]
       }
     },
     "Core_Settings":

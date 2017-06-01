@@ -21,7 +21,7 @@ class Button(QPushButton):
         super().__init__(text, parent)
         self.clicked.connect(connect)
         if fixed:
-            self.setFixedSize(40, 35)
+            self.setFixedSize(24, 20)
 
 
 class Action(QAction):

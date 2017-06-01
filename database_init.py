@@ -20,7 +20,8 @@ def create_database(databasename):
                           "id" INTEGER PRIMARY KEY, 
                           "ProjectName" TEXT,
                           "CreationDate" DATATIME,
-                          "LastOpened" DATATIME
+                          "LastOpened" DATATIME,
+                          "ImpactedArea" TEXT
                           );''')
 
 if __name__ == "__main__":
