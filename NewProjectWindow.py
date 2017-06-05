@@ -17,7 +17,7 @@ class NewProjectWindow(QMainWindow):
         self.setWindowTitle("Create new project")
         self.central_widget = QWidget()
         self.setCentralWidget(self.central_widget)
-
+        self.statusBar()
         self.all_box = QVBoxLayout()
         self.central_widget.setLayout(self.all_box)
         #CR Number
@@ -56,13 +56,29 @@ class NewProjectWindow(QMainWindow):
         self.form4.addWidget(self.filebut)
 
         # Impacted Area
+        self.form5 = QHBoxLayout()
         self.impactedarea_label = QLabel("Impacted area")
         self.impactedarea_line = QLineEdit()
+        self.impactedarea_line.setToolTip("All area must be entered with semi-colon separator")
+        self.impactedarea_line.setStatusTip("All area must be entered with semi-colon separator")
+
+        self.form5.addWidget(self.impactedarea_label)
+        self.form5.addWidget(self.impactedarea_line)
+
+        self.buttons = QHBoxLayout()
+        self.ok_but = Button("OK", self.ok_button, self.central_widget)
+        self.cancel_but = Button("Cancel", self.cancel_button, self.central_widget)
+
+        self.buttons.addStretch(1)
+        self.buttons.addWidget(self.ok_but)
+        self.buttons.addWidget(self.cancel_but)
 
         self.all_box.addLayout(self.form1)
         self.all_box.addLayout(self.form2)
         self.all_box.addLayout(self.form3)
+        self.all_box.addLayout(self.form5)
         self.all_box.addLayout(self.form4)
+        self.all_box.addLayout(self.buttons)
 
         self.all_box.addStretch(1)
 
@@ -75,6 +91,12 @@ class NewProjectWindow(QMainWindow):
     def formJiralink(self):
         self.jira_link.setText("https://servicedesk.vimpelcom.com/projects/GRSCM/issues/GRSCM-"
                                + self.crnumber_line.text())
+
+    def cancel_button(self):
+        print(self.sender().text())
+
+    def ok_button(self):
+        print(self.sender().text())
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)

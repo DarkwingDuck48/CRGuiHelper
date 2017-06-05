@@ -40,12 +40,15 @@ class StartWindow(QMainWindow):
                                                                 stop: 0 #E0E0E0, stop: 1 #FFFFFF);
                                 border: 1px solid gray;
                                 border-radius: 5px;
+                                padding: 5px;
                                 margin-top: 0.3ex;
+                                font-family: Calibri;
+                                font-size: 12px;
                                 }
                             QGroupBox:title 
-                                {subcontrol-origin: margin;
+                                {subcontrol-origin: border;
                                  subcontrol-position: top center;
-                                 padding: 0 5px;
+                                 padding: 0 3px;
                                  }
                         """
         recent_projects_group.setStyleSheet(groupbox_style)

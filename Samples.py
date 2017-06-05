@@ -56,7 +56,7 @@ class RecentProjectLabel(QLabel):
     def __init__(self, text, link, parent=None):
         """
 
-        :param text: project name 
+        :param text: project name
         :param link: link to project
         :param parent: parent widget
         """
@@ -64,9 +64,17 @@ class RecentProjectLabel(QLabel):
         self.text = text
         self.link = link
         self.setText(self.text + "\n" + self.link)
-        self.setStyleSheet("""QLabel:hover {background-color:#00FF00}
-                              """
-                           )
+        self.setStyleSheet("""
+                            QLabel{
+                                border: 0.5px solid grey;
+                                font-family: Calibri;
+                                font-size: 12px;
+                            }
+                            QLabel:hover{
+                                background-color:#00FF00;
+                                font-family: Calibri;
+                            }
+                            """)
         self.action = QAction()
         self.action.triggered.connect(self.mousePressEvent)
         self.addAction(self.action)
