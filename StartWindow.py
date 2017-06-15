@@ -1,15 +1,21 @@
 import sys
-from SettingsWindow import SettingsWindow
-from NewProjectWindow import NewProjectWindow
-from Samples import Button, Action, RecentProjectLabel
+import os
+import os.path
+#PyQt
 from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QAction, qApp  # Main application classes
 from PyQt5.QtWidgets import QSizePolicy, QSpacerItem, QLineEdit, QMenu, QGroupBox  # Tools for GUI
 from PyQt5.QtWidgets import QHBoxLayout, QVBoxLayout, QGridLayout  # Layouts
 from PyQt5.QtCore import QSize, QSettings
+# Custom
+from SettingsWindow import SettingsWindow
+from NewProjectWindow import NewProjectWindow
+from Samples import Button, Action, RecentProjectLabel
+from databasework import Database
 
 
 class StartWindow(QMainWindow):
-    def __init__(self):
+    def __init__(self, database_conn):
+        self.connection = database_conn
         QMainWindow.__init__(self)
         # init special variables
         self.top_menu = None
@@ -53,6 +59,7 @@ class StartWindow(QMainWindow):
                         """
         recent_projects_group.setStyleSheet(groupbox_style)
         recent_projects_group.setMinimumSize(self.width()/2, self.height()/2)
+        # todo replace this to select from database
         for i in range(1, 11):
             project = RecentProjectLabel("TestProject"+str(i), "TestProject"+str(i)+"Link", self.central_widget)
             vbox_left.addWidget(project)
@@ -84,8 +91,13 @@ class StartWindow(QMainWindow):
 
     def newproject_open(self):
         if not self.newproject_window_active:
-            self.newproject_window = NewProjectWindow()
+
+            self.newproject_window = NewProjectWindow(database=self.connection)
             self.newproject_window.show()
+
+    def newproject_close(self):
+        self.newproject_window_active = False
+        self.destroy(self.newproject_window)
 
     def action_open(self):
         print(self.minimumHeight())
@@ -116,6 +128,10 @@ class StartWindow(QMainWindow):
 
 
 if __name__ == '__main__':
+    path = os.path.join(os.getcwd(), "resources", "database_test.db")
+    data = Database(path)
+    connect_database = data.checkDatabase()
+
     app = QApplication(sys.argv)
-    startwindow = StartWindow()
+    startwindow = StartWindow(database_conn=connect_database)
     sys.exit(app.exec_())

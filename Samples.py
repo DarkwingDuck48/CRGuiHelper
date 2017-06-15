@@ -83,3 +83,19 @@ class RecentProjectLabel(QLabel):
         if QMouseEvent.button() == 1:
             print(self.text)
             print(self.link)
+
+
+class Styles:
+    def __init__(self):
+        self.errorLineEdit = """QLineEdit 
+                                        {
+                                            border : 2px solid red;
+                                            border-radius: 5px;
+                                         } 
+                                         """
+        self.validLineEdit = """QLineEdit 
+                                        {
+                                            border : 2px inset green;
+                                            border-radius: 2px;
+                                        }
+                                        """
