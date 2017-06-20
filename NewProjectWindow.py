@@ -1,31 +1,32 @@
 import sys
 import os
-import arrow        # datatime utility
+import arrow  # datatime utility
 # PyQt5 imports
 from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QAction, qApp  # Main application classes
-from PyQt5.QtWidgets import QLabel, QPushButton, QSizePolicy, QSpacerItem, QLineEdit, QMenu, QGroupBox,QCommonStyle  # Tools for GUI
-from PyQt5.QtWidgets import QHBoxLayout, QVBoxLayout, QGridLayout, QFormLayout # Layouts
-from PyQt5.QtWidgets import QFileDialog,QMessageBox
-from PyQt5.QtCore import QSize, QSettings, QObject
+from PyQt5.QtWidgets import QLabel, QPushButton, QSizePolicy, QSpacerItem, QLineEdit, QMenu, QGroupBox, QCompleter
+from PyQt5.QtWidgets import QHBoxLayout, QVBoxLayout, QGridLayout, QFormLayout  # Layouts
+from PyQt5.QtWidgets import QFileDialog, QMessageBox,QToolTip
+from PyQt5.QtCore import QSize, QSettings, QObject, QPoint
 # Custom
-from Samples import Button, Action, RecentProjectLabel,Styles
+from Samples import Button, Action, RecentProjectLabel, Styles
 from databasework import Database
-
 styles = Styles()
 
 
 class NewProjectWindow(QMainWindow):
-    def __init__(self, parent=None, database=False):
+    def __init__(self, parent=None, database_path= ""):
         QMainWindow.__init__(self, parent)
+        self.apps = ["GRSHFM", "GRSHPL", "VDP", "CXO", "RF"]
 
-        if database == False:
+        if not database_path:
             self.msg_err = QMessageBox()
             self.msg_err.setIcon(QMessageBox.Critical)
             self.msg_err.setWindowTitle("Critical Error!")
             self.msg_err.setText("Data base is NOT created!")
             self.msg_err.setStandardButtons(QMessageBox.Ok)
             self.msg_err.exec_()
-
+        else:
+            self.database_connection = Database(database_path)
         self.setFixedSize(QSize(560, 410))
         self.setWindowTitle("Create new project")
         self.central_widget = QWidget()
@@ -38,11 +39,14 @@ class NewProjectWindow(QMainWindow):
         self.form1 = QHBoxLayout()
         self.crnumber_label = QLabel("CR Number")
         self.crnumber_line = QLineEdit()
+        self.error_label = QLabel("This number already in Database")
+        self.error_label.setVisible(False)
         # self.crnumber_line.setValidator(QIntValidator(1, 10000, self.central_widget))
         self.crnumber_line.editingFinished.connect(self.formJiralink)
         self.crnumber_line.setFixedSize(50, 20)
         self.form1.addWidget(self.crnumber_label)
         self.form1.addWidget(self.crnumber_line)
+        self.form1.addWidget(self.error_label)
         self.form1.addStretch(0)
 
         # CR Title
@@ -54,7 +58,6 @@ class NewProjectWindow(QMainWindow):
         self.form2.addWidget(self.crtitle_line)
 
         # CR Jira's Link
-
         self.form3 = QHBoxLayout()
         self.jira_link_label = QLabel("Jira's link")
         self.jira_link = QLineEdit()
@@ -73,9 +76,12 @@ class NewProjectWindow(QMainWindow):
         self.form4.addWidget(self.filebut)
 
         # Impacted Area
+        # todo do it as labels
         self.form5 = QHBoxLayout()
-        self.impactedarea_label = QLabel("Impacted area")
+        self.impactedarea_label = QLabel("Application")
         self.impactedarea_line = QLineEdit()
+        completer = QCompleter(self.apps, self.central_widget)
+        self.impactedarea_line.setCompleter(completer)
         self.impactedarea_line.setToolTip("All area must be entered with semi-colon separator")
         self.impactedarea_line.setStatusTip("All area must be entered with semi-colon separator")
 
@@ -106,7 +112,15 @@ class NewProjectWindow(QMainWindow):
         self.docs_folder_line.setText(filename)
 
     def formJiralink(self):
-        if self.crnumber_line.text() != "" and self.crnumber_line.text().isdigit():
+        in_base = self.inbase()
+
+        if in_base:
+            self.crnumber_line.setStyleSheet(styles.errorLineEdit)
+            self.error_label.setVisible(True)
+
+        elif self.crnumber_line.text() != "" and self.crnumber_line.text().isdigit():
+            if self.error_label.isVisible():
+                self.error_label.setVisible(False)
             self.crnumber_line.setStyleSheet(styles.validLineEdit)
             self.jira_link.setStyleSheet(styles.validLineEdit)
             self.jira_link.setText("https://servicedesk.vimpelcom.com/projects/GRSCM/issues/GRSCM-"
@@ -114,20 +128,47 @@ class NewProjectWindow(QMainWindow):
         else:
             self.jira_link.setStyleSheet(styles.errorLineEdit)
             self.crnumber_line.setStyleSheet(styles.errorLineEdit)
-
             self.jira_link.setText("No CR number")
 
     def cancel_button(self):
-        print(self.sender().text())
+        self.hide()
+
+    def inbase(self) -> bool:
+        with self.database_connection.con:
+            temp_cur = self.database_connection.con.cursor()
+            if list(temp_cur.execute("""SELECT COUNT(*) FROM Project WHERE id = ?""", (int(self.crnumber_line.text()), )))[0] == (1, ):
+                return True
+            else:
+                return False
 
     def ok_button(self):
-        print(self.sender().text())
 
+        print(self.sender().text())
+        data_all = {"ProjectPath": ""}
+        data_project = {"id": "",
+                        "ProjectName": "",
+                        "CreationDate": "",
+                        "LastOpened": "",
+                        "ImpactedApp": "",
+                        "JiraLink": ""
+                        }
+        if self.crnumber_line.text() != "" and self.crnumber_line.text().isdigit():
+            data_project["id"] = int(self.crnumber_line.text())
+        if self.crtitle_line.text() != "":
+            data_project["ProjectName"] = self.crtitle_line.text()
+        if self.jira_link.text() != "":
+            data_project["JiraLink"] = self.jira_link.text()
+        if self.docs_folder_line.text() != "":
+            data_all["ProjectPath"] = self.docs_folder_line.text()
+        if self.impactedarea_line.text() != "":
+            data_project["ImpactedApp"] = self.impactedarea_line.text()
+        data_project["CreationDate"] = arrow.utcnow().to('local').format("MM.DD.YYYY")
+        data_project["LastOpened"] = arrow.utcnow().to('local').format("MM.DD.YYYY HH:mm:ss")
+        print(data_project)
+        print(list(data_project.values()))
+        self.database_connection.insert_values(tuple(data_project.values()))
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     newprojectwindow = NewProjectWindow()
-    utc = arrow.utcnow().to('local').format("MM.DD.YYYY")
-    print(utc)
     sys.exit(app.exec_())
-

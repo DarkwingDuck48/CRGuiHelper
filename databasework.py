@@ -23,9 +23,9 @@ class Database:
                             (
                               "id" INTEGER, 
                               "ProjectName" TEXT,
-                              "CreationDate" DATATIME,
-                              "LastOpened" DATATIME,
-                              "ImpactedArea" TEXT,
+                              "CreationDate" TEXT,
+                              "LastOpened" TEXT,
+                              "ImpactedApp" TEXT,
                               "JiraLink" TEXT
                               );''')
 
@@ -35,16 +35,19 @@ class Database:
             tables = [i[0] for i in list(cur.execute('''Select name from sqlite_master'''))]
             if "AllProjects" in tables:
                 print(tables)
-                return True
+                return cur
             else:
+                os.remove(self.databasename)
                 return False
 
     def insert_values(self, row):
-        pass
-
+        with self.con:
+            cur = self.con.cursor()
+            cur.executemany('''INSERT OR REPLACE INTO Project VALUES (?,?,?,?,?,?);''', (row,))
+        print("HELLO FROM DATABASE CLASS")
 
 if __name__ == "__main__":
     path = os.path.join(os.getcwd(), "resources", "database_test.db")
     data = Database(path)
-    #data.create_database()
-    data.checkDatabase()
+#    data.create_database()
+

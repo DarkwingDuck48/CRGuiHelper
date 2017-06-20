@@ -14,8 +14,8 @@ from databasework import Database
 
 
 class StartWindow(QMainWindow):
-    def __init__(self, database_conn):
-        self.connection = database_conn
+    def __init__(self, database_path):
+        self.database_path = database_path
         QMainWindow.__init__(self)
         # init special variables
         self.top_menu = None
@@ -91,13 +91,8 @@ class StartWindow(QMainWindow):
 
     def newproject_open(self):
         if not self.newproject_window_active:
-
-            self.newproject_window = NewProjectWindow(database=self.connection)
+            self.newproject_window = NewProjectWindow(database_path=self.database_path)
             self.newproject_window.show()
-
-    def newproject_close(self):
-        self.newproject_window_active = False
-        self.destroy(self.newproject_window)
 
     def action_open(self):
         print(self.minimumHeight())
@@ -131,7 +126,7 @@ if __name__ == '__main__':
     path = os.path.join(os.getcwd(), "resources", "database_test.db")
     data = Database(path)
     connect_database = data.checkDatabase()
-
-    app = QApplication(sys.argv)
-    startwindow = StartWindow(database_conn=connect_database)
-    sys.exit(app.exec_())
+    if connect_database:
+        app = QApplication(sys.argv)
+        startwindow = StartWindow(database_path=path)
+        sys.exit(app.exec_())

@@ -14,7 +14,7 @@ class Button(QPushButton):
         """
 
         :param text: Button name
-        :param connect: connection name
+        :param connect: database_path name
         :param parent: parent name
         :param fixed: if true => fixed size is (40,35) 
         """
@@ -99,3 +99,21 @@ class Styles:
                                             border-radius: 2px;
                                         }
                                         """
+    
+    def compare_styles(self, compared, type_stylesheet: str) -> bool:
+        """
+        
+        :param compared: styleSheet from target widget
+        :param type_stylesheet: Can be "error" or "valid"
+        :return: bool
+        """
+        if type_stylesheet.lower() == "error":
+            if compared == self.errorLineEdit:
+                return True
+            else:
+                return False
+        elif type_stylesheet.lower() == "valid":
+            if compared == self.validLineEdit:
+                return True
+            else:
+                return False
