@@ -9,9 +9,10 @@ from PyQt5.QtCore import QSize, QSettings
 # Custom
 from SettingsWindow import SettingsWindow
 from NewProjectWindow import NewProjectWindow
-from Samples import Button, Action, RecentProjectLabel
+from Samples import Button, Action, RecentProjectLabel,Update_Projects
 from databasework import Database
 
+#todo dynamic update of recent projects
 
 class StartWindow(QMainWindow):
     def __init__(self, database_path):
@@ -19,17 +20,18 @@ class StartWindow(QMainWindow):
         QMainWindow.__init__(self)
         # init special variables
         self.top_menu = None
-        self.recent_Projects = {}
         self.setting_window_active = False
         self.newproject_window_active = False
+        self.database_con = Database(self.database_path)
 
         self.setFixedSize(QSize(560, 410))
         self.setWindowTitle("CR Helper")
         self.central_widget = QWidget(self)
         self.setCentralWidget(self.central_widget)
         self.statusBar()
-        for i in range(1, 11):
-            self.recent_Projects.update({"TestProject" + str(i): "TestProject" + str(i) + "Link"})
+
+        x = Update_Projects(database=self.database_path)
+        self.recent_Projects = x.update_database()
         self.menubar_create()
 
         hbox_layout = QHBoxLayout(self)
@@ -60,8 +62,9 @@ class StartWindow(QMainWindow):
         recent_projects_group.setStyleSheet(groupbox_style)
         recent_projects_group.setMinimumSize(self.width()/2, self.height()/2)
         # todo replace this to select from database
-        for i in range(1, 11):
-            project = RecentProjectLabel("TestProject"+str(i), "TestProject"+str(i)+"Link", self.central_widget)
+        print(self.recent_Projects)
+        for i in self.recent_Projects.keys():
+            project = RecentProjectLabel(i, self.recent_Projects[i], self.central_widget)
             vbox_left.addWidget(project)
         vbox_left.addStretch(1)
 

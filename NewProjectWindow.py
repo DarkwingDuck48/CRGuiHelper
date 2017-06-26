@@ -8,15 +8,26 @@ from PyQt5.QtWidgets import QHBoxLayout, QVBoxLayout, QGridLayout, QFormLayout  
 from PyQt5.QtWidgets import QFileDialog, QMessageBox,QToolTip
 from PyQt5.QtCore import QSize, QSettings, QObject, QPoint
 # Custom
-from Samples import Button, Action, RecentProjectLabel, Styles
+from Samples import Button, Action, RecentProjectLabel, Styles, Update_Projects
 from databasework import Database
 styles = Styles()
 
 
 class NewProjectWindow(QMainWindow):
-    def __init__(self, parent=None, database_path= ""):
+    def __init__(self, parent=None, database_path=""):
         QMainWindow.__init__(self, parent)
+        # Custom variable
         self.apps = ["GRSHFM", "GRSHPL", "VDP", "CXO", "RF"]
+        self.retrieved = ""
+        self.in_base = False
+        self.rewrite_flag = False
+
+        # Database change complite
+        self.msg_inform = QMessageBox()
+        self.msg_inform.setIcon(QMessageBox.Information)
+        self.msg_inform.setWindowTitle("Database changed")
+        self.msg_inform.setText("New CR added to database")
+        self.msg_inform.setStandardButtons(QMessageBox.Ok)
 
         if not database_path:
             self.msg_err = QMessageBox()
@@ -112,23 +123,37 @@ class NewProjectWindow(QMainWindow):
         self.docs_folder_line.setText(filename)
 
     def formJiralink(self):
-        in_base = self.inbase()
 
-        if in_base:
-            self.crnumber_line.setStyleSheet(styles.errorLineEdit)
-            self.error_label.setVisible(True)
+        # Clear all lines before generate new values
+        self.jira_link.clear()
+        self.impactedarea_line.clear()
+        self.crtitle_line.clear()
+        self.docs_folder_line.clear()
 
-        elif self.crnumber_line.text() != "" and self.crnumber_line.text().isdigit():
+        if self.crnumber_line.text() != "":
+            self.in_base = self.inbase()
+            if self.crnumber_line.text().isdigit() and self.in_base:
+                self.crnumber_line.setStyleSheet(styles.errorLineEdit)
+                self.error_label.setVisible(True)
+                self.retrieved = self.database_connection.get_values(int(self.crnumber_line.text()))
+                self.retrieve_data(self.retrieved)
+                self.rewrite_flag = True
+
+            elif self.crnumber_line.text().isdigit() and not self.in_base:
+                if self.error_label.isVisible():
+                    self.error_label.setVisible(False)
+                self.crnumber_line.setStyleSheet(styles.validLineEdit)
+                self.rewrite_flag = False
+                self.jira_link.setStyleSheet(styles.validLineEdit)
+                self.jira_link.setText("https://servicedesk.vimpelcom.com/projects/GRSCM/issues/GRSCM-"
+                                       + self.crnumber_line.text())
+            elif not self.crnumber_line.text().isdigit():
+                self.jira_link.setStyleSheet(styles.errorLineEdit)
+                self.crnumber_line.setStyleSheet(styles.errorLineEdit)
+                self.jira_link.setText("No CR number")
+        else:
             if self.error_label.isVisible():
                 self.error_label.setVisible(False)
-            self.crnumber_line.setStyleSheet(styles.validLineEdit)
-            self.jira_link.setStyleSheet(styles.validLineEdit)
-            self.jira_link.setText("https://servicedesk.vimpelcom.com/projects/GRSCM/issues/GRSCM-"
-                                   + self.crnumber_line.text())
-        else:
-            self.jira_link.setStyleSheet(styles.errorLineEdit)
-            self.crnumber_line.setStyleSheet(styles.errorLineEdit)
-            self.jira_link.setText("No CR number")
 
     def cancel_button(self):
         self.hide()
@@ -142,31 +167,60 @@ class NewProjectWindow(QMainWindow):
                 return False
 
     def ok_button(self):
+        if self.rewrite_flag:
+            self.buttonReply = QMessageBox.question(self, 'Rewrite data',
+                                            "This CR number already exist in database.\n Do you want to rewrite data?",
+                                            QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+            if self.buttonReply == QMessageBox.Yes:
+                self.write_data()
+                self.msg_inform.exec_()
+                self.hide()
+        else:
+            self.write_data()
+            if self.inbase():
+                self.msg_inform.exec_()
 
-        print(self.sender().text())
-        data_all = {"ProjectPath": ""}
+        self.hide()
+
+
+    def retrieve_data(self, sett):
+        self.crtitle_line.setText(sett[0])
+        self.docs_folder_line.setText(sett[1])
+        self.impactedarea_line.setText(sett[2])
+        self.jira_link.setText(sett[3])
+
+    def write_data(self):
+
+        data_all = {"id": "",
+                    "ProjectName": "",
+                    "ProjectPath": ""}
         data_project = {"id": "",
                         "ProjectName": "",
+                        "ProjectPath": "",
                         "CreationDate": "",
                         "LastOpened": "",
                         "ImpactedApp": "",
                         "JiraLink": ""
                         }
+
         if self.crnumber_line.text() != "" and self.crnumber_line.text().isdigit():
             data_project["id"] = int(self.crnumber_line.text())
+            data_all["id"] = int(self.crnumber_line.text())
         if self.crtitle_line.text() != "":
             data_project["ProjectName"] = self.crtitle_line.text()
+            data_all["ProjectName"] = self.crtitle_line.text()
         if self.jira_link.text() != "":
             data_project["JiraLink"] = self.jira_link.text()
         if self.docs_folder_line.text() != "":
+            data_project["ProjectPath"] = self.docs_folder_line.text()
             data_all["ProjectPath"] = self.docs_folder_line.text()
         if self.impactedarea_line.text() != "":
             data_project["ImpactedApp"] = self.impactedarea_line.text()
-        data_project["CreationDate"] = arrow.utcnow().to('local').format("MM.DD.YYYY")
-        data_project["LastOpened"] = arrow.utcnow().to('local').format("MM.DD.YYYY HH:mm:ss")
-        print(data_project)
-        print(list(data_project.values()))
-        self.database_connection.insert_values(tuple(data_project.values()))
+        data_project["CreationDate"] = arrow.utcnow().to('local').format("DD.MM.YYYY")
+        data_project["LastOpened"] = arrow.utcnow().to('local').format("DD.MM.YYYY HH:mm:ss")
+
+        self.database_connection.insert_values("project", tuple(data_project.values()))
+        self.database_connection.insert_values("all", tuple(data_all.values()))
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)

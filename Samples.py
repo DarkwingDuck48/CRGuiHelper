@@ -1,8 +1,11 @@
 import sys
+import os
+import os.path
 from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QAction, qApp  # Main application classes
 from PyQt5.QtWidgets import QLabel, QPushButton, QSizePolicy, QSpacerItem, QLineEdit, QMenu, QGroupBox  # Tools for GUI
 from PyQt5.QtWidgets import QHBoxLayout, QVBoxLayout, QGridLayout  # Layouts
 from PyQt5.QtCore import QSize, QSettings
+from databasework import Database
 
 
 class Button(QPushButton):
@@ -62,8 +65,11 @@ class RecentProjectLabel(QLabel):
         """
         super().__init__(parent)
         self.text = text
-        self.link = link
-        self.setText(self.text + "\n" + self.link)
+        self.link = link.split("/")
+        self.link = "\\".join([self.link[0], self.link[1]]) + "\\...\\" + \
+                    "\\".join([self.link[len(self.link) - 2], self.link[len(self.link) - 1]])
+        if len(self.link) <= 40:
+            self.setText(self.text + "\n" + self.link)
         self.setStyleSheet("""
                             QLabel{
                                 border: 0.5px solid grey;
@@ -117,3 +123,23 @@ class Styles:
                 return True
             else:
                 return False
+
+
+class Update_Projects:
+    def __init__(self, updated_dict= None, database = None):
+
+        self.database_connected = Database(database)
+        if updated_dict is None:
+            self.top_menu = {}
+        else:
+            self.top_menu = updated_dict
+
+    def update_database(self):
+        with self.database_connected.con:
+            cur = self.database_connected.con.cursor()
+            self.last_open = [i for i in list(cur.execute('''Select ProjectName, ProjectPath, LastOpened from 
+                                             (Select * from AllProjects JOIN Project on AllProjects.id = Project.id
+                                                             ) as New ORDER BY New.LastOpened DESC LIMIT 10'''))]
+            for i in self.last_open:
+                self.top_menu.update({i[0]: i[1]})
+        return self.top_menu
